@@ -1,0 +1,29 @@
+{
+  "displays": [
+    {
+      "name": "Room 1",
+      "protocol": "rs232",
+      "address": "/dev/ttyUSB0",
+      "baudrate": 9600,
+      "image_map": {
+        "Unclassified": "unclass.png",
+        "Classified": "classified.png",
+        "Secret": "secret.png",
+        "TopSecret": "ts.png",
+        "screenshot test": "uploads/room_1/20250929_155400_Screenshot_2025-09-05_110905.png"
+      }
+    },
+    {
+      "name": "Room 2",
+      "protocol": "tcp",
+      "address": "10.0.0.22:5000",
+      "image_map": {
+        "Unclassified": "unclass.png",
+        "Classified": "classified.png",
+        "Secret": "secret.png",
+        "TopSecret": "ts.png",
+        "test": "uploads/room_2/20250929_155629_Screenshot_2025-09-05_110905.png"
+      }
+    }
+  ]
+}

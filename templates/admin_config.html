@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Configuration - Classification Commander</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: white;
+            padding: 20px;
+            background-image: url('/static/background.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.01);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .tab-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.01);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            padding: 10px;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            border-radius: 10px;
+        }
+
+        .tab.active {
+            color: white;
+            background: rgba(74, 200, 234, 0.2);
+        }
+
+        .tab:hover {
+            color: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .config-section {
+            background: rgba(255, 255, 255, 0.01);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .config-section h2 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #4AC8EA;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .config-section h3 {
+            font-size: 1.2rem;
+            margin: 20px 0 15px 0;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #4AC8EA;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .user-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .user-card h3 {
+            margin: 0 0 15px 0;
+            color: #4AC8EA;
+        }
+
+        .success-message {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid rgba(76, 175, 80, 0.5);
+            color: #4caf50;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .error-message {
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid rgba(244, 67, 54, 0.5);
+            color: #f44336;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .warning-box {
+            background: rgba(255, 152, 0, 0.1);
+            border: 2px solid rgba(255, 152, 0, 0.5);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            color: #ffa726;
+        }
+
+        .info-box {
+            background: rgba(33, 150, 243, 0.1);
+            border: 1px solid rgba(33, 150, 243, 0.5);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            color: #64b5f6;
+        }
+
+        .log-viewer {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .refresh-btn {
+            background: rgba(74, 200, 234, 0.2);
+            border: 1px solid rgba(74, 200, 234, 0.5);
+            color: #4AC8EA;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .refresh-btn:hover {
+            background: rgba(74, 200, 234, 0.3);
+        }
+
+        .guide-content {
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.8;
+        }
+
+        .guide-content h2 {
+            color: #4AC8EA;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+
+        .guide-content h3 {
+            color: rgba(255, 255, 255, 0.95);
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .guide-content code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .guide-content pre {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        .guide-content ul, .guide-content ol {
+            margin-left: 30px;
+            margin-bottom: 15px;
+        }
+
+        .guide-content li {
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚙️ Admin Configuration</h1>
+            <div class="header-buttons">
+                <a href="/" class="btn btn-secondary">← Back to Dashboard</a>
+                <a href="/logout" class="btn btn-secondary">Logout</a>
+            </div>
+        </div>
+
+        <div class="tab-container">
+            <button class="tab active" onclick="switchTab('users')">👥 User Management</button>
+            <button class="tab" onclick="switchTab('logs')">📋 System Logs</button>
+            <button class="tab" onclick="switchTab('guide')">📖 Admin Guide</button>
+        </div>
+
+        <div id="users-tab" class="tab-content active">
+            <div id="userSuccess" class="success-message"></div>
+            <div id="userError" class="error-message"></div>
+
+            <div class="config-section">
+                <h2>👤 Administrator Account</h2>
+                <div class="user-card">
+                    <h3>Admin User</h3>
+                    <div class="form-group">
+                        <label for="admin-username">Username:</label>
+                        <input type="text" id="admin-username" value="{{ admin_username }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="admin-password">New Password (leave blank to keep current):</label>
+                        <input type="password" id="admin-password" placeholder="Enter new password">
+                    </div>
+                    <div class="form-group">
+                        <label for="admin-password-confirm">Confirm New Password:</label>
+                        <input type="password" id="admin-password-confirm" placeholder="Confirm new password">
+                    </div>
+                    <button class="btn btn-primary" onclick="updateUser('admin')">💾 Save Admin Changes</button>
+                </div>
+            </div>
+
+            <div class="config-section">
+                <h2>👷 Operator Account</h2>
+                <div class="user-card">
+                    <h3>Operator User</h3>
+                    <div class="form-group">
+                        <label for="operator-username">Username:</label>
+                        <input type="text" id="operator-username" value="{{ operator_username }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="operator-password">New Password (leave blank to keep current):</label>
+                        <input type="password" id="operator-password" placeholder="Enter new password">
+                    </div>
+                    <div class="form-group">
+                        <label for="operator-password-confirm">Confirm New Password:</label>
+                        <input type="password" id="operator-password-confirm" placeholder="Confirm new password">
+                    </div>
+                    <button class="btn btn-primary" onclick="updateUser('operator')">💾 Save Operator Changes</button>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <strong>💡 Password Requirements:</strong>
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li>Minimum 12 characters recommended</li>
+                    <li>Mix of uppercase, lowercase, numbers, and symbols</li>
+                    <li>Unique per user</li>
+                    <li>Changes take effect immediately</li>
+                </ul>
+            </div>
+        </div>
+
+        <div id="logs-tab" class="tab-content">
+            <div class="config-section">
+                <h2>📋 System Logs</h2>
+                
+                <h3>Application Audit Log</h3>
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
+                    <button class="refresh-btn" onclick="refreshLogs('audit')">🔄 Refresh</button>
+                </div>
+                <div class="log-viewer" id="auditLog">Loading...</div>
+
+                <h3 style="margin-top: 30px;">Classification Changes Log</h3>
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
+                    <button class="refresh-btn" onclick="refreshLogs('classification')">🔄 Refresh</button>
+                </div>
+                <div class="log-viewer" id="classificationLog">Loading...</div>
+            </div>
+        </div>
+
+        <div id="guide-tab" class="tab-content">
+            <div class="config-section">
+                <div class="guide-content" id="guideContent">
+                    Loading Admin Guide...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabName) {
+            const tabs = document.querySelectorAll('.tab');
+            const contents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => tab.classList.remove('active'));
+            contents.forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName + '-tab').classList.add('active');
+            
+            if (tabName === 'logs') {
+                refreshLogs('audit');
+                refreshLogs('classification');
+            } else if (tabName === 'guide') {
+                loadAdminGuide();
+            }
+        }
+
+        async function updateUser(role) {
+            const usernameField = document.getElementById(`${role}-username`);
+            const passwordField = document.getElementById(`${role}-password`);
+            const confirmField = document.getElementById(`${role}-password-confirm`);
+            const successDiv = document.getElementById('userSuccess');
+            const errorDiv = document.getElementById('userError');
+            
+            const username = usernameField.value.trim();
+            const password = passwordField.value;
+            const confirm = confirmField.value;
+            
+            if (!username) {
+                errorDiv.textContent = 'Username cannot be empty';
+                errorDiv.style.display = 'block';
+                successDiv.style.display = 'none';
+                return;
+            }
+            
+            if (password || confirm) {
+                if (password !== confirm) {
+                    errorDiv.textContent = 'Passwords do not match';
+                    errorDiv.style.display = 'block';
+                    successDiv.style.display = 'none';
+                    return;
+                }
+                
+                if (password.length < 4) {
+                    errorDiv.textContent = 'Password must be at least 4 characters';
+                    errorDiv.style.display = 'block';
+                    successDiv.style.display = 'none';
+                    return;
+                }
+            }
+            
+            try {
+                const data = { username: username };
+                if (password) {
+                    data.password = password;
+                }
+                
+                const response = await fetch(`/api/users/${role}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    successDiv.textContent = `${role.charAt(0).toUpperCase() + role.slice(1)} account updated successfully!`;
+                    successDiv.style.display = 'block';
+                    errorDiv.style.display = 'none';
+                    
+                    passwordField.value = '';
+                    confirmField.value = '';
+                    
+                    setTimeout(() => {
+                        successDiv.style.display = 'none';
+                    }, 5000);
+                } else {
+                    errorDiv.textContent = `Error: ${result.message}`;
+                    errorDiv.style.display = 'block';
+                    successDiv.style.display = 'none';
+                }
+            } catch (error) {
+                errorDiv.textContent = `Error: ${error.message}`;
+                errorDiv.style.display = 'block';
+                successDiv.style.display = 'none';
+            }
+        }
+
+        async function refreshLogs(logType) {
+            const logDiv = document.getElementById(logType === 'audit' ? 'auditLog' : 'classificationLog');
+            logDiv.textContent = 'Loading...';
+            
+            try {
+                const response = await fetch(`/api/logs/${logType}`);
+                const data = await response.json();
+                
+                if (data.content) {
+                    logDiv.textContent = data.content;
+                } else {
+                    logDiv.textContent = 'No log entries found.';
+                }
+            } catch (error) {
+                logDiv.textContent = 'Error loading logs: ' + error.message;
+            }
+        }
+
+        async function loadAdminGuide() {
+            const guideDiv = document.getElementById('guideContent');
+            
+            try {
+                const response = await fetch('/api/admin-guide');
+                const data = await response.json();
+                
+                if (data.content) {
+                    guideDiv.innerHTML = data.content;
+                } else {
+                    guideDiv.textContent = 'Admin guide not available.';
+                }
+            } catch (error) {
+                guideDiv.textContent = 'Error loading admin guide: ' + error.message;
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            // Nothing to load on initial page load
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classification Commander</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: url('/static/background.png') center center / cover no-repeat fixed;
+            background-color: #1a1a1a;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .header h1 {
+            color: #ffffff;
+            font-size: 2rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+        }
+        
+        .header-icons {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .header-icon,
+        .gear-icon {
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            transition: transform 0.2s, opacity 0.2s;
+            opacity: 0.9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .header-icon:hover,
+        .gear-icon:hover {
+            transform: scale(1.1);
+            opacity: 1;
+        }
+        
+        .gear-icon {
+            font-size: 28px;
+            text-decoration: none;
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.7));
+        }
+        
+        .header-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        .displays-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            justify-items: center;
+        }
+        
+        .display-card {
+            width: 280px;
+            background: rgba(255, 255, 255, 0.01);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            position: relative;
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+
+        .display-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(0,0,0,0.4);
+        }
+        
+        .classification-block {
+            width: 100%;
+            height: 80px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            margin-bottom: 15px;
+            border: 2px solid rgba(0,0,0,0.1);
+        }
+        
+        .classification-secret {
+            background: #FF3B30;
+        }
+        
+        .classification-unclassified {
+            background: #34C759;
+        }
+        
+        .classification-classified {
+            background: #FF9500;
+        }
+        
+        .classification-topsecret {
+            background: #FFCC00;
+            color: #333;
+            text-shadow: none;
+        }
+        
+        .room-name {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 20px;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+        
+        .radio-group {
+            text-align: left;
+            margin-bottom: 15px;
+        }
+        
+        .radio-option {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .radio-option input[type="radio"] {
+            margin-right: 8px;
+            transform: scale(1.2);
+        }
+        
+        .radio-option label {
+            cursor: pointer;
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+        
+        .card-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 15px;
+        }
+        
+        .add-more, .btn-edit, .btn-delete {
+            background: none;
+            border: none;
+            padding: 8px;
+            cursor: pointer;
+            transition: transform 0.2s, opacity 0.2s;
+            flex: 1;
+            min-width: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .add-more:hover,
+        .btn-edit:hover,
+        .btn-delete:hover {
+            transform: scale(1.1);
+            opacity: 0.8;
+        }
+        
+        .add-more img {
+            filter: brightness(0.5);
+        }
+        
+        .btn-edit img {
+            filter: hue-rotate(220deg) saturate(2) brightness(0.7);
+        }
+        
+        .add-display-card {
+            width: 280px;
+            background: rgba(255, 255, 255, 0.01);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            border-radius: 20px;
+            border: 2px dashed rgba(255, 255, 255, 0.6);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            position: relative;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+
+        .add-display-card:hover {
+            border-color: #4AC8EA;
+            color: #4AC8EA;
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(0,0,0,0.4);
+        }
+        
+        .add-display-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            line-height: 1;
+        }
+        
+        .add-display-text {
+            font-size: 18px;
+            font-weight: 500;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal-content {
+            background: rgba(255, 255, 255, 0.01);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            position: relative;
+            margin: 10% auto;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+        }
+        
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .modal-header h3 {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 24px;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #007AFF;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #007AFF;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #0056CC;
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .status-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            z-index: 2000;
+            min-width: 300px;
+            text-align: center;
+        }
+        
+        .status-success {
+            background: #34C759;
+            color: white;
+        }
+        
+        .status-error {
+            background: #FF3B30;
+            color: white;
+        }
+        
+        .add-image-modal .form-group {
+            margin-bottom: 15px;
+        }
+        
+        @media (max-width: 768px) {
+            .displays-container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .display-card,
+            .add-display-card {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Classification Commander</h1>
+        <div class="header-icons">
+            {% if user_role == 'admin' %}
+            <a href="/admin-config" class="gear-icon" title="Admin Config">⚙️</a>
+            {% endif %}
+            <a href="/logout" class="header-icon" title="Logout">
+                <img src="/static/icons/logout.png" alt="Logout">
+            </a>
+        </div>
+    </div>
+    
+    <div class="displays-container">
+        {% for display in displays %}
+        <div class="display-card" data-display-name="{{ display.name }}">
+            <div class="classification-block classification-{{ display.current_classification.lower().replace(' ', '-') }}">
+                {% if display.current_classification == 'Secret' %}SECRET
+                {% elif display.current_classification == 'Unclassified' %}UNCLASS
+                {% elif display.current_classification == 'Classified' %}CLASSIFIED  
+                {% elif display.current_classification == 'TopSecret' %}TS
+                {% else %}{{ display.current_classification.upper() }}
+                {% endif %}
+            </div>
+            
+            <div class="room-name">{{ display.name }}</div>
+            
+            <div class="radio-group">
+                {% for classification in display.classifications %}
+                <div class="radio-option">
+                    <input type="radio" 
+                           id="{{ display.name|replace(' ', '_') }}_{{ classification }}" 
+                           name="{{ display.name|replace(' ', '_') }}_classification" 
+                           value="{{ classification }}"
+                           onchange="applyClassification('{{ display.name }}', '{{ classification }}')"
+                           {% if classification == display.current_classification %}checked{% endif %}>
+                    <label for="{{ display.name|replace(' ', '_') }}_{{ classification }}">
+                        {% if classification == 'TopSecret' %}Top Secret
+                        {% else %}{{ classification }}
+                        {% endif %}
+                    </label>
+                </div>
+                {% endfor %}
+            </div>
+            
+            {% if user_role == 'admin' %}
+            <div class="card-actions">
+                <button class="add-more" onclick="showAddImageModal('{{ display.name }}')">
+                    <img src="/static/icons/plus.png" alt="Add" width="16" height="16">
+                </button>
+                <button class="btn-edit" onclick="showEditDisplayModal('{{ display.name }}')">
+                    <img src="/static/icons/pencil.png" alt="Edit" width="16" height="16">
+                </button>
+                <button class="btn-delete" onclick="confirmDeleteDisplay('{{ display.name }}')">
+                    <img src="/static/icons/delete.png" alt="Delete" width="16" height="16">
+                </button>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+        
+        {% if user_role == 'admin' %}
+        <div class="add-display-card" onclick="showAddDisplayModal()">
+            <div class="add-display-icon">✛</div>
+            <div class="add-display-text">Add Display</div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Add Display Modal -->
+    <div id="addDisplayModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Display</h3>
+            </div>
+            <form id="addDisplayForm">
+                <div class="form-group">
+                    <label for="displayName">Room Name:</label>
+                    <input type="text" id="displayName" placeholder="e.g., Conference Room A" required>
+                </div>
+                <div class="form-group">
+                    <label for="displayBrand">Display Brand:</label>
+                    <select id="displayBrand" onchange="showBrandParameters()" required>
+                        <option value="">-- Select Brand --</option>
+                        <option value="nec">NEC</option>
+                        <option value="lg">LG</option>
+                        <option value="extron">Extron</option>
+                        <option value="crestron">Crestron</option>
+                        <option value="planar">Planar</option>
+                        <option value="samsung">Samsung</option>
+                        <option value="sony">Sony</option>
+                        <option value="generic">Generic (Custom Commands)</option>
+                    </select>
+                </div>
+                <div id="brandParameters" style="display: none;">
+                    <!-- Brand-specific parameters will be dynamically added here -->
+                </div>
+                <div class="form-group">
+                    <label for="displayProtocol">Connection Type:</label>
+                    <select id="displayProtocol" onchange="toggleBaudrateField()" required>
+                        <option value="">-- Select Type --</option>
+                        <option value="tcp">Network (TCP/IP)</option>
+                        <option value="rs232">Serial (RS-232)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="displayAddress">IP Address / Device Path:</label>
+                    <input type="text" id="displayAddress" placeholder="e.g., 192.168.1.100:5000 or /dev/ttyUSB0" required>
+                </div>
+                <div class="form-group" id="baudrateGroup" style="display: none;">
+                    <label for="displayBaudrate">Baud Rate:</label>
+                    <select id="displayBaudrate">
+                        <option value="9600">9600</option>
+                        <option value="19200">19200</option>
+                        <option value="38400">38400</option>
+                        <option value="57600">57600</option>
+                        <option value="115200">115200</option>
+                    </select>
+                </div>
+                <div class="button-group">
+                    <button type="button" class="btn btn-secondary" onclick="hideAddDisplayModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Display</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Add Image Modal -->
+    <div id="addImageModal" class="modal">
+        <div class="modal-content add-image-modal">
+            <div class="modal-header">
+                <h3>Add Custom Classification</h3>
+            </div>
+            <form id="addImageForm">
+                <div class="form-group">
+                    <label for="imageName">Classification Name:</label>
+                    <input type="text" id="imageName" placeholder="e.g., Top Secret, Confidential" required>
+                </div>
+                <div class="form-group">
+                    <label for="imageFile">Image File:</label>
+                    <input type="file" id="imageFile" accept="image/*" required>
+                </div>
+                <div class="button-group">
+                    <button type="button" class="btn btn-secondary" onclick="hideAddImageModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Classification</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Edit Display Modal -->
+    <div id="editDisplayModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Display</h3>
+            </div>
+            <form id="editDisplayForm">
+                <input type="hidden" id="editDisplayCurrentName">
+                <div class="form-group">
+                    <label for="editDisplayName">Room Name:</label>
+                    <input type="text" id="editDisplayName" placeholder="e.g., Conference Room A" required>
+                </div>
+                <div class="form-group">
+                    <label for="editDisplayProtocol">Connection Type:</label>
+                    <select id="editDisplayProtocol" onchange="toggleEditBaudrateField()" required>
+                        <option value="tcp">Network (TCP/IP)</option>
+                        <option value="rs232">Serial (RS-232)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editDisplayAddress">IP Address / Device Path:</label>
+                    <input type="text" id="editDisplayAddress" placeholder="e.g., 192.168.1.100:5000 or /dev/ttyUSB0" required>
+                </div>
+                <div class="form-group" id="editBaudrateGroup" style="display: none;">
+                    <label for="editDisplayBaudrate">Baud Rate:</label>
+                    <select id="editDisplayBaudrate">
+                        <option value="9600">9600</option>
+                        <option value="19200">19200</option>
+                        <option value="38400">38400</option>
+                        <option value="57600">57600</option>
+                        <option value="115200">115200</option>
+                    </select>
+                </div>
+                <div class="button-group">
+                    <button type="button" class="btn btn-secondary" onclick="hideEditDisplayModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Display</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteConfirmModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Confirm Delete</h3>
+            </div>
+            <div style="text-align: center; margin: 20px 0;">
+                <p>Are you sure you want to delete this display?</p>
+                <p><strong id="deleteDisplayName"></strong></p>
+                <p style="color: #d32f2f; font-size: 14px; margin-top: 10px;">This action cannot be undone.</p>
+            </div>
+            <div class="button-group">
+                <button type="button" class="btn btn-secondary" onclick="hideDeleteConfirmModal()">Cancel</button>
+                <button type="button" class="btn btn-primary" style="background: #d32f2f;" onclick="deleteDisplay()">Delete Display</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentDisplayForImage = null;
+        let currentDisplayForEdit = null;
+        let currentDisplayForDelete = null;
+        let vendorConfig = {};
+        
+        // Load vendor configuration on page load
+        window.addEventListener('DOMContentLoaded', loadVendorConfig);
+        
+        // Auto-refresh status every 10 seconds
+        setInterval(refreshStatus, 10000);
+        
+        async function loadVendorConfig() {
+            try {
+                const response = await fetch('/api/vendors');
+                vendorConfig = await response.json();
+            } catch (error) {
+                console.error('Failed to load vendor config:', error);
+            }
+        }
+        
+        function showBrandParameters() {
+            const brandSelect = document.getElementById('displayBrand');
+            const brandParametersDiv = document.getElementById('brandParameters');
+            const selectedBrand = brandSelect.value;
+            
+            if (!selectedBrand || !vendorConfig[selectedBrand]) {
+                brandParametersDiv.style.display = 'none';
+                brandParametersDiv.innerHTML = '';
+                return;
+            }
+            
+            const brand = vendorConfig[selectedBrand];
+            let html = '<h4>Brand-Specific Configuration</h4>';
+            
+            brand.required_params.forEach(param => {
+                const label = brand.param_labels[param] || param;
+                const options = brand.param_options[param] || [];
+                
+                html += '<div class="form-group">';
+                html += `<label for="param_${param}">${label}:</label>`;
+                
+                if (options.length > 0) {
+                    // Dropdown for options
+                    html += `<select id="param_${param}" required>`;
+                    html += '<option value="">-- Select --</option>';
+                    options.forEach(option => {
+                        html += `<option value="${option}">${option}</option>`;
+                    });
+                    html += '</select>';
+                } else {
+                    // Text input for numeric/text values
+                    html += `<input type="text" id="param_${param}" placeholder="Enter ${label.toLowerCase()}" required>`;
+                }
+                
+                html += '</div>';
+            });
+            
+            brandParametersDiv.innerHTML = html;
+            brandParametersDiv.style.display = 'block';
+        }
+        
+        function getBrandParameters() {
+            const brandSelect = document.getElementById('displayBrand');
+            const selectedBrand = brandSelect.value;
+            const parameters = {};
+            
+            if (!selectedBrand || !vendorConfig[selectedBrand]) {
+                return parameters;
+            }
+            
+            const brand = vendorConfig[selectedBrand];
+            brand.required_params.forEach(param => {
+                const input = document.getElementById(`param_${param}`);
+                if (input && input.value) {
+                    // Convert to appropriate type
+                    const value = input.value;
+                    if (!isNaN(value) && value !== '') {
+                        parameters[param] = parseInt(value);
+                    } else {
+                        parameters[param] = value;
+                    }
+                }
+            });
+            
+            return parameters;
+        }
+
+        async function refreshStatus() {
+            try {
+                const response = await fetch('/api/status');
+                
+                // Check if we got redirected to login (session expired)
+                if (response.redirected || response.status === 302 || response.url.includes('/login')) {
+                    window.location.href = '/login';
+                    return;
+                }
+                
+                // Check if response is ok before parsing
+                if (!response.ok) {
+                    return;
+                }
+                
+                const result = await response.json();
+                
+                if (result.displays) {
+                    result.displays.forEach(display => {
+                        updateDisplayStatus(display.name, display.current_classification);
+                    });
+                }
+            } catch (error) {
+                // Silently fail if we can't parse - likely logged out
+            }
+        }
+        
+        function updateDisplayStatus(displayName, classification) {
+            const card = document.querySelector(`[data-display-name="${displayName}"]`);
+            if (!card) return;
+            
+            const block = card.querySelector('.classification-block');
+            const radio = card.querySelector(`input[value="${classification}"]`);
+            
+            if (block) {
+                // Update block class and text
+                block.className = `classification-block classification-${classification.toLowerCase().replace(' ', '-')}`;
+                
+                if (classification === 'Secret') block.textContent = 'SECRET';
+                else if (classification === 'Unclassified') block.textContent = 'UNCLASS';
+                else if (classification === 'Classified') block.textContent = 'CLASSIFIED';
+                else if (classification === 'TopSecret') block.textContent = 'TS';
+                else block.textContent = classification.toUpperCase();
+            }
+            
+            if (radio) {
+                radio.checked = true;
+            }
+        }
+        
+        async function applyClassification(displayName, classification) {
+            try {
+                const response = await fetch('/api/send-command', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        display_name: displayName,
+                        classification: classification
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    updateDisplayStatus(displayName, classification);
+                    showStatus(`✓ ${displayName} set to ${classification}`, 'success');
+                } else {
+                    showStatus(`✗ Error: ${result.message}`, 'error');
+                    // Refresh to reset radio button
+                    setTimeout(() => location.reload(), 1000);
+                }
+            } catch (error) {
+                showStatus(`✗ Network error: ${error.message}`, 'error');
+            }
+        }
+        
+        
+        function showAddDisplayModal() {
+            document.getElementById('addDisplayModal').style.display = 'block';
+        }
+        
+        function hideAddDisplayModal() {
+            document.getElementById('addDisplayModal').style.display = 'none';
+            document.getElementById('addDisplayForm').reset();
+            document.getElementById('baudrateGroup').style.display = 'none';
+        }
+        
+        function showAddImageModal(displayName) {
+            currentDisplayForImage = displayName;
+            document.getElementById('addImageModal').style.display = 'block';
+        }
+        
+        function hideAddImageModal() {
+            document.getElementById('addImageModal').style.display = 'none';
+            document.getElementById('addImageForm').reset();
+            currentDisplayForImage = null;
+        }
+        
+        function toggleBaudrateField() {
+            const protocol = document.getElementById('displayProtocol').value;
+            const baudrateGroup = document.getElementById('baudrateGroup');
+            baudrateGroup.style.display = protocol === 'rs232' ? 'block' : 'none';
+        }
+        
+        // Add Display Form Handler
+        document.getElementById('addDisplayForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('displayName').value;
+            const brand = document.getElementById('displayBrand').value;
+            const protocol = document.getElementById('displayProtocol').value;
+            const address = document.getElementById('displayAddress').value;
+            const baudrate = document.getElementById('displayBaudrate').value;
+            
+            const data = { name, brand, protocol, address };
+            if (protocol === 'rs232') {
+                data.baudrate = parseInt(baudrate);
+            }
+            
+            // Add brand-specific parameters
+            const brandParams = getBrandParameters();
+            data.brand_params = brandParams;
+            
+            try {
+                const response = await fetch('/api/displays/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showStatus(`✓ ${name} added successfully`, 'success');
+                    hideAddDisplayModal();
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showStatus(`✗ Error: ${result.message}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`✗ Error: ${error.message}`, 'error');
+            }
+        });
+        
+        // Add Image Form Handler  
+        document.getElementById('addImageForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!currentDisplayForImage) return;
+            
+            const label = document.getElementById('imageName').value;
+            const file = document.getElementById('imageFile').files[0];
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('label', label);
+            
+            try {
+                const response = await fetch(`/api/displays/${encodeURIComponent(currentDisplayForImage)}/images`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showStatus(`✓ ${label} added to ${currentDisplayForImage}`, 'success');
+                    hideAddImageModal();
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showStatus(`✗ Upload failed: ${result.message}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`✗ Upload error: ${error.message}`, 'error');
+            }
+        });
+        
+        function showStatus(message, type) {
+            // Remove existing status messages
+            const existing = document.querySelector('.status-message');
+            if (existing) existing.remove();
+            
+            const statusDiv = document.createElement('div');
+            statusDiv.className = `status-message status-${type}`;
+            statusDiv.textContent = message;
+            document.body.appendChild(statusDiv);
+            
+            // Auto-remove after 4 seconds
+            setTimeout(() => {
+                if (statusDiv.parentNode) {
+                    statusDiv.remove();
+                }
+            }, 4000);
+        }
+        
+        // Edit Display Functions
+        async function showEditDisplayModal(displayName) {
+            currentDisplayForEdit = displayName;
+            
+            // Load current display configuration
+            try {
+                const response = await fetch('/api/config');
+                const config = await response.json();
+                const display = config.displays.find(d => d.name === displayName);
+                
+                if (display) {
+                    document.getElementById('editDisplayCurrentName').value = displayName;
+                    document.getElementById('editDisplayName').value = display.name;
+                    document.getElementById('editDisplayProtocol').value = display.protocol;
+                    document.getElementById('editDisplayAddress').value = display.address;
+                    
+                    if (display.protocol === 'rs232') {
+                        document.getElementById('editDisplayBaudrate').value = display.baudrate || 9600;
+                        document.getElementById('editBaudrateGroup').style.display = 'block';
+                    } else {
+                        document.getElementById('editBaudrateGroup').style.display = 'none';
+                    }
+                    
+                    document.getElementById('editDisplayModal').style.display = 'block';
+                } else {
+                    showStatus('Display not found', 'error');
+                }
+            } catch (error) {
+                showStatus('Failed to load display information', 'error');
+            }
+        }
+        
+        function hideEditDisplayModal() {
+            document.getElementById('editDisplayModal').style.display = 'none';
+            document.getElementById('editDisplayForm').reset();
+            document.getElementById('editBaudrateGroup').style.display = 'none';
+            currentDisplayForEdit = null;
+        }
+        
+        function toggleEditBaudrateField() {
+            const protocol = document.getElementById('editDisplayProtocol').value;
+            const baudrateGroup = document.getElementById('editBaudrateGroup');
+            baudrateGroup.style.display = protocol === 'rs232' ? 'block' : 'none';
+        }
+        
+        // Delete Display Functions
+        function confirmDeleteDisplay(displayName) {
+            currentDisplayForDelete = displayName;
+            document.getElementById('deleteDisplayName').textContent = displayName;
+            document.getElementById('deleteConfirmModal').style.display = 'block';
+        }
+        
+        function hideDeleteConfirmModal() {
+            document.getElementById('deleteConfirmModal').style.display = 'none';
+            currentDisplayForDelete = null;
+        }
+        
+        async function deleteDisplay() {
+            if (!currentDisplayForDelete) return;
+            
+            try {
+                const response = await fetch(`/api/displays/${encodeURIComponent(currentDisplayForDelete)}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showStatus(`✓ ${currentDisplayForDelete} deleted successfully`, 'success');
+                    hideDeleteConfirmModal();
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showStatus(`✗ Error: ${result.message}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`✗ Delete failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Edit Display Form Handler
+        document.getElementById('editDisplayForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!currentDisplayForEdit) return;
+            
+            const currentName = document.getElementById('editDisplayCurrentName').value;
+            const name = document.getElementById('editDisplayName').value;
+            const protocol = document.getElementById('editDisplayProtocol').value;
+            const address = document.getElementById('editDisplayAddress').value;
+            const baudrate = document.getElementById('editDisplayBaudrate').value;
+            
+            const data = { name, protocol, address };
+            if (protocol === 'rs232') {
+                data.baudrate = parseInt(baudrate);
+            }
+            
+            try {
+                const response = await fetch(`/api/displays/${encodeURIComponent(currentName)}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showStatus(`✓ ${name} updated successfully`, 'success');
+                    hideEditDisplayModal();
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showStatus(`✗ Error: ${result.message}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`✗ Update failed: ${error.message}`, 'error');
+            }
+        });
+        
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            const addDisplayModal = document.getElementById('addDisplayModal');
+            const addImageModal = document.getElementById('addImageModal');
+            const editDisplayModal = document.getElementById('editDisplayModal');
+            const deleteConfirmModal = document.getElementById('deleteConfirmModal');
+            
+            if (event.target === addDisplayModal) {
+                hideAddDisplayModal();
+            } else if (event.target === addImageModal) {
+                hideAddImageModal();
+            } else if (event.target === editDisplayModal) {
+                hideEditDisplayModal();
+            } else if (event.target === deleteConfirmModal) {
+                hideDeleteConfirmModal();
+            }
+        }
+    </script>
+</body>
+</html>
