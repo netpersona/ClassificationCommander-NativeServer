@@ -24,6 +24,19 @@
         "TopSecret": "ts.png",
         "test": "uploads/room_2/20250929_155629_Screenshot_2025-09-05_110905.png"
       }
+    },
+    {
+      "name": "a",
+      "protocol": "tcp",
+      "address": "127.0.0.1",
+      "brand": "nec",
+      "brand_params": {},
+      "image_map": {
+        "Unclassified": "default_unclass.png",
+        "Classified": "default_classified.png",
+        "Secret": "default_secret.png",
+        "TopSecret": "default_topsecret.png"
+      }
     }
   ]
 }

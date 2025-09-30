@@ -407,21 +407,7 @@
             <div class="room-name">{{ display.name }}</div>
             
             <div class="radio-group">
-                {% for classification in display.classifications %}
-                <div class="radio-option">
-                    <input type="radio" 
-                           id="{{ display.name|replace(' ', '_') }}_{{ classification }}" 
-                           name="{{ display.name|replace(' ', '_') }}_classification" 
-                           value="{{ classification }}"
-                           onchange="applyClassification('{{ display.name }}', '{{ classification }}')"
-                           {% if classification == display.current_classification %}checked{% endif %}>
-                    <label for="{{ display.name|replace(' ', '_') }}_{{ classification }}">
-                        {% if classification == 'TopSecret' %}Top Secret
-                        {% else %}{{ classification }}
-                        {% endif %}
-                    </label>
-                </div>
-                {% endfor %}
+                {{ display.classifications_html }}
             </div>
             
             {% if user_role == 'admin' %}

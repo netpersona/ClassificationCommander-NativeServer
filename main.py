@@ -413,68 +413,146 @@ def dispatch_command(display_name, classification):
         return False, error_msg
 
 def render_template(template_name, **context):
-    """Simple template rendering"""
+    """Simple template rendering - processes Jinja2-like syntax"""
     template_path = Path('templates') / template_name
     if not template_path.exists():
         return f"Template not found: {template_name}"
     
     with open(template_path, 'r', encoding='utf-8') as f:
-        template = f.read()
+        html = f.read()
     
-    # Simple Jinja2-like template replacement
-    for key, value in context.items():
-        # Handle boolean checks like {% if user_role == 'admin' %}
-        if key == 'user_role' and value:
-            template = re.sub(r'{%\s*if\s+user_role\s*==\s*[\'"]admin[\'"]\s*%}(.*?){%\s*endif\s*%}',
-                            r'\1' if value == 'admin' else '', template, flags=re.DOTALL)
+    # Process user_role conditional
+    if 'user_role' in context:
+        user_role = context['user_role']
+        # Replace {% if user_role == 'admin' %} ... {% endif %} blocks
+        html = re.sub(
+            r'{%\s*if\s+user_role\s*==\s*[\'"]admin[\'"]\s*%}(.*?){%\s*endif\s*%}',
+            r'\1' if user_role == 'admin' else '',
+            html,
+            flags=re.DOTALL
+        )
+    
+    # Process displays loop
+    if 'displays' in context and isinstance(context['displays'], list):
+        # Find the outer display loop
+        outer_pattern = r'{%\s*for\s+display\s+in\s+displays\s*%}(.*?){%\s*endfor\s*%}'
+        outer_match = re.search(outer_pattern, html, re.DOTALL)
         
-        # Handle variable replacement
-        template = template.replace('{{ ' + key + ' }}', str(value) if value is not None else '')
-        
-        # Handle loops {% for display in displays %}
-        if key == 'displays' and isinstance(value, list):
-            loop_pattern = r'{%\s*for\s+display\s+in\s+displays\s*%}(.*?){%\s*endfor\s*%}'
-            match = re.search(loop_pattern, template, re.DOTALL)
-            if match:
-                loop_template = match.group(1)
-                loop_result = []
-                for display in value:
-                    loop_item = loop_template
-                    for dk, dv in display.items():
-                        if isinstance(dv, dict):
-                            for sub_k, sub_v in dv.items():
-                                loop_item = loop_item.replace(f'{{{{ display.{dk}.{sub_k} }}}}', str(sub_v))
-                        elif isinstance(dv, list):
-                            # Handle lists in displays
-                            if dk == 'classifications':
-                                class_pattern = r'{%\s*for\s+classification\s+in\s+display\.classifications\s*%}(.*?){%\s*endfor\s*%}'
-                                class_match = re.search(class_pattern, loop_item, re.DOTALL)
-                                if class_match:
-                                    class_template = class_match.group(1)
-                                    class_result = []
-                                    for classification in dv:
-                                        class_item = class_template.replace('{{ classification }}', classification)
-                                        class_item = class_item.replace('{{ display.current_classification }}', display.get('current_classification', ''))
-                                        class_item = class_item.replace('{{ display.name|replace(\' \', \'_\') }}', display['name'].replace(' ', '_'))
-                                        class_result.append(class_item)
-                                    loop_item = re.sub(class_pattern, ''.join(class_result), loop_item, flags=re.DOTALL)
-                        else:
-                            loop_item = loop_item.replace(f'{{{{ display.{dk} }}}}', str(dv))
-                    
-                    # Handle filters and conditionals
-                    loop_item = loop_item.replace('{{ display.name|replace(\' \', \'_\') }}', display['name'].replace(' ', '_'))
-                    loop_item = re.sub(r'{{.*?display\.current_classification\.lower\(\)\.replace\(.*?\).*?}}',
-                                      display.get('current_classification', '').lower().replace(' ', '-'), loop_item)
-                    
-                    loop_result.append(loop_item)
+        if outer_match:
+            display_template = outer_match.group(1)
+            all_displays_html = []
+            
+            for display in context['displays']:
+                display_html = display_template
                 
-                template = re.sub(loop_pattern, ''.join(loop_result), template, flags=re.DOTALL)
+                # First, handle inner classification loop
+                inner_pattern = r'{%\s*for\s+classification\s+in\s+display\.classifications\s*%}(.*?){%\s*endfor\s*%}'
+                inner_match = re.search(inner_pattern, display_html, re.DOTALL)
+                
+                logger.debug(f"Display: {display.get('name', 'Unknown')}, inner_match: {inner_match is not None}, has classifications: {'classifications' in display}")
+                if 'classifications' in display:
+                    logger.debug(f"  Classifications: {display['classifications']}")
+                
+                if inner_match and 'classifications' in display:
+                    class_template = inner_match.group(1)
+                    all_classes_html = []
+                    
+                    logger.debug(f"Processing {len(display['classifications'])} classifications for {display['name']}")
+                    
+                    for classification in display['classifications']:
+                        class_html = class_template
+                        
+                        # Replace {{ classification }} - handle different spacing
+                        class_html = class_html.replace('{{ classification }}', classification)
+                        class_html = re.sub(r'{{\s*classification\s*}}', classification, class_html)
+                        
+                        # Handle {% if classification == 'TopSecret' %}...{% else %}...{% endif %}
+                        if_else_pattern = r'{%\s*if\s+classification\s*==\s*[\'"]TopSecret[\'"]\s*%}(.*?){%\s*else\s*%}(.*?){%\s*endif\s*%}'
+                        if classification == 'TopSecret':
+                            class_html = re.sub(if_else_pattern, r'\1', class_html, flags=re.DOTALL)
+                        else:
+                            class_html = re.sub(if_else_pattern, r'\2', class_html, flags=re.DOTALL)
+                        
+                        # Handle {% if classification == display.current_classification %}checked{% endif %}
+                        is_checked = (classification == display.get('current_classification', ''))
+                        class_html = re.sub(
+                            r'{%\s*if\s+classification\s*==\s*display\.current_classification\s*%}checked{%\s*endif\s*%}',
+                            'checked' if is_checked else '',
+                            class_html
+                        )
+                        
+                        # Replace {{ display.name|replace(' ', '_') }}
+                        safe_display_name = display['name'].replace(' ', '_')
+                        class_html = class_html.replace("{{ display.name|replace(' ', '_') }}", safe_display_name)
+                        
+                        # Replace {{ display.name }}
+                        class_html = class_html.replace('{{ display.name }}', display['name'])
+                        
+                        all_classes_html.append(class_html)
+                    
+                    # Replace the classification loop with all generated HTML
+                    display_html = re.sub(inner_pattern, ''.join(all_classes_html), display_html, flags=re.DOTALL)
+                
+                # Now replace display-level variables
+                # Handle {{ display.current_classification.lower().replace(' ', '-') }}
+                current_class_css = display.get('current_classification', 'Unclassified').lower().replace(' ', '-')
+                display_html = re.sub(
+                    r'{{\s*display\.current_classification\.lower\(\)\.replace\([\'\" ]*,\s*[\'\"-]*\)\s*}}',
+                    current_class_css,
+                    display_html
+                )
+                
+                # Handle the complex if/elif/else for classification display text
+                current_classification = display.get('current_classification', '')
+                if current_classification == 'Secret':
+                    display_text = 'SECRET'
+                elif current_classification == 'Unclassified':
+                    display_text = 'UNCLASS'
+                elif current_classification == 'Classified':
+                    display_text = 'CLASSIFIED'
+                elif current_classification == 'TopSecret':
+                    display_text = 'TS'
+                else:
+                    display_text = current_classification.upper()
+                
+                # Replace the if/elif/else block
+                display_html = re.sub(
+                    r'{%\s*if\s+display\.current_classification.*?{%\s*endif\s*%}',
+                    display_text,
+                    display_html,
+                    flags=re.DOTALL
+                )
+                
+                # Replace {{ display.name|replace(' ', '_') }}
+                safe_display_name = display['name'].replace(' ', '_')
+                display_html = display_html.replace("{{ display.name|replace(' ', '_') }}", safe_display_name)
+                
+                # Replace {{ display.name }}
+                display_html = display_html.replace('{{ display.name }}', display['name'])
+                
+                # Replace other display properties (including classifications_html)
+                for key, value in display.items():
+                    if not isinstance(value, (dict, list)):
+                        display_html = display_html.replace(f'{{{{ display.{key} }}}}', str(value))
+                    elif key == 'classifications' and isinstance(value, list):
+                        # Skip the classifications list, we use classifications_html instead
+                        continue
+                
+                all_displays_html.append(display_html)
+            
+            # Replace the outer loop with all generated display HTML
+            html = re.sub(outer_pattern, ''.join(all_displays_html), html, flags=re.DOTALL)
+    
+    # Replace simple {{ variable }} tags
+    for key, value in context.items():
+        if not isinstance(value, (dict, list)):
+            html = html.replace(f'{{{{ {key} }}}}', str(value) if value is not None else '')
     
     # Clean up any remaining template syntax
-    template = re.sub(r'{%.*?%}', '', template)
-    template = re.sub(r'{{.*?}}', '', template)
+    html = re.sub(r'{%[^}]*%}', '', html)
+    html = re.sub(r'{{[^}]*}}', '', html)
     
-    return template
+    return html
 
 class ClassificationHandler(BaseHTTPRequestHandler):
     """HTTP request handler for Classification Commander"""
@@ -636,7 +714,7 @@ class ClassificationHandler(BaseHTTPRequestHandler):
                 config = load_config()
                 status = load_status()
                 
-                # Merge config and status
+                # Merge config and status and generate display HTML
                 displays = []
                 for display in config.get('displays', []):
                     display_status = status.get(display['name'], {})
@@ -644,6 +722,28 @@ class ClassificationHandler(BaseHTTPRequestHandler):
                     display_data['current_classification'] = display_status.get('classification', 'Unclassified')
                     display_data['last_update'] = display_status.get('timestamp', 'Never')
                     display_data['classifications'] = CLASSIFICATIONS
+                    
+                    # Generate classification radio buttons HTML
+                    classifications_html = []
+                    for classification in CLASSIFICATIONS:
+                        safe_name = display['name'].replace(' ', '_')
+                        checked = 'checked' if classification == display_data['current_classification'] else ''
+                        display_label = 'Top Secret' if classification == 'TopSecret' else classification
+                        
+                        radio_html = f'''<div class="radio-option">
+                    <input type="radio" 
+                           id="{safe_name}_{classification}" 
+                           name="{safe_name}_classification" 
+                           value="{classification}"
+                           onchange="applyClassification('{display['name']}', '{classification}')"
+                           {checked}>
+                    <label for="{safe_name}_{classification}">
+                        {display_label}
+                    </label>
+                </div>'''
+                        classifications_html.append(radio_html)
+                    
+                    display_data['classifications_html'] = '\n'.join(classifications_html)
                     displays.append(display_data)
                 
                 html = render_template('index.html',
@@ -700,7 +800,17 @@ class ClassificationHandler(BaseHTTPRequestHandler):
                 self.send_json_response({'success': False, 'message': 'Authentication required'}, 401)
                 return
             
-            self.send_json_response({'vendors': DISPLAY_VENDORS})
+            # Create JSON-serializable version without lambda functions
+            vendors_info = {}
+            for vendor_key, vendor_data in DISPLAY_VENDORS.items():
+                vendors_info[vendor_key] = {
+                    'name': vendor_data.get('name', vendor_key),
+                    'required_params': vendor_data.get('required_params', []),
+                    'param_labels': vendor_data.get('param_labels', {}),
+                    'param_options': vendor_data.get('param_options', {})
+                }
+            
+            self.send_json_response({'vendors': vendors_info})
         
         # API: Get status
         elif path == '/api/status':
@@ -897,12 +1007,17 @@ class ClassificationHandler(BaseHTTPRequestHandler):
             if isinstance(baudrate, list):
                 baudrate = baudrate[0] if baudrate else '9600'
             
-            # Create new display
-            try:
-                brand_params_parsed = json.loads(brand_params_str)
-            except (json.JSONDecodeError, ValueError):
-                self.send_json_response({'success': False, 'message': 'Invalid brand_params JSON'}, 400)
-                return
+            # Create new display - handle brand_params
+            if isinstance(brand_params_str, dict):
+                brand_params_parsed = brand_params_str
+            elif isinstance(brand_params_str, str):
+                try:
+                    brand_params_parsed = json.loads(brand_params_str)
+                except (json.JSONDecodeError, ValueError):
+                    self.send_json_response({'success': False, 'message': 'Invalid brand_params JSON'}, 400)
+                    return
+            else:
+                brand_params_parsed = {}
             
             new_display = {
                 'name': name,
@@ -1047,11 +1162,16 @@ class ClassificationHandler(BaseHTTPRequestHandler):
                 baudrate_str = baudrate_str[0] if baudrate_str else '9600'
             
             protocol = protocol.lower()
-            try:
-                brand_params = json.loads(brand_params_str)
-            except (json.JSONDecodeError, ValueError):
-                self.send_json_response({'success': False, 'message': 'Invalid brand_params JSON'}, 400)
-                return
+            if isinstance(brand_params_str, dict):
+                brand_params = brand_params_str
+            elif isinstance(brand_params_str, str):
+                try:
+                    brand_params = json.loads(brand_params_str)
+                except (json.JSONDecodeError, ValueError):
+                    self.send_json_response({'success': False, 'message': 'Invalid brand_params JSON'}, 400)
+                    return
+            else:
+                brand_params = {}
             
             if protocol == 'rs232':
                 baudrate = int(baudrate_str)
