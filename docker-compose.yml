@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  classification-commander:
+    build: .
+    ports:
+      - "${PORT:-5000}:${PORT:-5000}"
+    environment:
+      - PORT=${PORT:-5000}
+      - SECRET_KEY=${SECRET_KEY:-dev-secret-key-change-in-production}
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
+      - OPERATOR_USERNAME=${OPERATOR_USERNAME:-}
+      - OPERATOR_PASSWORD=${OPERATOR_PASSWORD:-}
+    volumes:
+      - ./config.json:/app/config.json
+      - ./credentials.json:/app/credentials.json
+      - ./logs:/app/logs
+      - ./images:/app/images
+    restart: unless-stopped
+    container_name: classification-commander

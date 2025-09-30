@@ -165,6 +165,89 @@ sudo systemctl restart classification-commander
 # Stop current process and restart with environment variables set
 ```
 
+## Server Configuration
+
+### Changing the Server Port
+
+By default, Classification Commander runs on **port 5000**. You can configure a different port using the `PORT` environment variable.
+
+#### Direct Python Deployment
+
+**Using default port (5000):**
+```bash
+python main.py
+```
+
+**Using custom port:**
+```bash
+PORT=8080 python main.py
+```
+
+**Or export the variable first:**
+```bash
+export PORT=8080
+python main.py
+```
+
+**For Windows:**
+```cmd
+set PORT=8080
+python main.py
+```
+
+#### Docker Deployment
+
+**Method 1: Using .env file**
+```bash
+# Edit .env file
+echo "PORT=8080" >> .env
+
+# Run with docker-compose
+docker-compose up -d
+```
+
+**Method 2: Inline environment variable**
+```bash
+PORT=8080 docker-compose up -d
+```
+
+**Method 3: Edit docker-compose.yml**
+```yaml
+services:
+  classification-commander:
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+```
+
+#### Systemd Service Configuration
+
+Add the PORT environment variable to your systemd service file:
+```ini
+[Service]
+Environment=PORT=8080
+Environment=SECRET_KEY=your_secure_key
+# ... other environment variables
+ExecStart=/usr/bin/python3 main.py
+```
+
+#### Important Notes
+
+- **Firewall Rules**: Ensure your firewall allows traffic on the configured port
+- **Reverse Proxy**: If using nginx or Apache, update proxy settings to match the new port
+- **Default Port**: Port 5000 is used if PORT is not set
+- **Port Conflicts**: Verify the port is not already in use: `netstat -tuln | grep <port>`
+
+**Testing Port Configuration:**
+```bash
+# Verify server is listening on the correct port
+netstat -tuln | grep <your_port>
+
+# Or use curl to test
+curl http://localhost:<your_port>/login
+```
+
 ## Display Management
 
 ### Adding a Display
