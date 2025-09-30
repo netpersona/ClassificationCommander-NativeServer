@@ -4,6 +4,12 @@
 
 A web-based classification banner control system designed for conference rooms and secure facilities. The application controls multiple displays via RS232 and TCP protocols to show classification banners (Unclassified, Classified, Secret, Top Secret). Features include web-based control interface, NIST SP 800-53 IA-5(7) compliant authentication, and role-based access control.
 
+<img width="636" height="463" alt="Login" src="https://github.com/user-attachments/assets/6a65a579-08cb-4833-ae0c-65795b25ee4b" />
+
+<img width="661" height="425" alt="Admin_Board" src="https://github.com/user-attachments/assets/248131ff-a202-4f0a-bbf8-a34dfa8ee16c" />
+
+<img width="616" height="437" alt="Admin_Config" src="https://github.com/user-attachments/assets/265ecb6f-63b4-422f-8220-998d66b72c92" />
+
 ## System Architecture
 
 ### Frontend Architecture
